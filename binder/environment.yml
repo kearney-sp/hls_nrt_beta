@@ -1,0 +1,19 @@
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - gdal
+  - rasterio
+  - shapely
+  - geopandas
+  - geoviews
+  - holoviews
+  - xarray
+  - matplotlib
+  - cartopy
+  - scikit-image
+  - hvplot
+  - pyepsg
+  - jupyterlab
+  - intake-stac
+  - sat-search
