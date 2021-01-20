@@ -29,7 +29,7 @@ def mask_hls(src):
 
 
 def bolton_mask(src, time_dim='time'):
-    from .band import blue_func, swir2_func
+    from src.hls_funcs.bands import blue_func, swir2_func
     dat_blue = blue_func(src)
     dat_swir2 = swir2_func(src)
 
