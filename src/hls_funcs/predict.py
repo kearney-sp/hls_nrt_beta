@@ -3,6 +3,7 @@ import pandas as pd
 import xarray as xr
 from src.hls_funcs.bands import *
 from src.hls_funcs.indices import *
+from pysptools.abundance_maps import amaps
 
 func_dict = {
     "blue": blue_func,
@@ -82,3 +83,40 @@ def pred_bm(dat, model, dim):
     bm_out = pred_func_xr(dat_masked, model_vars, dims_list)
 
     return bm_out
+
+
+def pred_cov(dat, ends_dict, dim):
+    end_classes = list(ends_dict.keys())
+    end_vars = list(ends_dict[end_classes[0]].keys())
+    end_vals = np.array([list(ends_dict[c].values()) for c in end_classes])
+
+    dims_list = [[dim] for c in end_vars]
+
+    def pred_unmix(*args, ends, idx):
+        mat = np.array(args).T
+        unmixed = amaps.UCLS(mat, np.array(ends[0]))
+        return unmixed[:, idx]
+
+    def pred_unmix_xr(dat_xr, dims, ends, idx, name):
+        vars_list_xr = []
+        for v in end_vars:
+            vars_list_xr.append(func_dict[v](dat_xr))
+        unmixed_xr = xr.apply_ufunc(pred_unmix,
+                                    *vars_list_xr,
+                                    dask='parallelized',
+                                    vectorize=True,
+                                    input_core_dims=dims,
+                                    output_core_dims=[dims[0]],
+                                    output_dtypes=['float32'],
+                                    kwargs=dict(ends=ends, idx=idx))
+        unmixed_xr = unmixed_xr.assign_coords(type=name)
+        return unmixed_xr
+
+    covArrays = []
+    for idx, c in enumerate(end_classes):
+        covArrays.append(pred_unmix_xr(dat, dims=dims_list, ends=[end_vals], idx=idx, name=c).unstack('z').persist())
+
+    dat_cov = xr.concat(covArrays, dim='type', join='override', combine_attrs='drop')
+    #dat_cov['type'] = [c for c in end_classes]
+    dat_cov = dat_cov.to_dataset(dim='type')
+    return dat_cov
