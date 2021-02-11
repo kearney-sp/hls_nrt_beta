@@ -95,6 +95,8 @@ def pred_cov(dat, ends_dict, dim):
     def pred_unmix(*args, ends, idx):
         mat = np.array(args).T
         unmixed = amaps.UCLS(mat, np.array(ends[0]))
+        unmixed[unmixed < 0] = 0
+        unmixed[unmixed > 1.0] = 1.0
         return unmixed[:, idx]
 
     def pred_unmix_xr(dat_xr, dims, ends, idx, name):
