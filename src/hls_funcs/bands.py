@@ -1,30 +1,30 @@
 
 
 def blue_func(src):
-    blue = src['B02']
+    blue = src['BLUE']
     return blue
 
 
 def green_func(src):
-    green = src['B03']
+    green = src['GREEN']
     return green
 
 
 def red_func(src):
-    red = src['B04']
+    red = src['RED']
     return red
 
 
 def nir_func(src):
-    nir = src['B8A']
+    nir = src['NIR1']
     return nir
 
 
 def swir1_func(src):
-    swir1 = src['B11']
+    swir1 = src['SWIR1']
     return swir1
 
 
 def swir2_func(src):
-    swir2 = src['B12']
+    swir2 = src['SWIR2']
     return swir2
