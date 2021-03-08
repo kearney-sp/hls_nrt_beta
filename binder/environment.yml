@@ -15,6 +15,12 @@ dependencies:
   - hvplot
   - pyepsg
   - jupyterlab
+  - jupyter-server-proxy
+  - jupyter-panel-proxy
+  - panel
+  - dask-labextension
+  - param
+  - hvplot
   - intake-stac
   - sat-search
   - statsmodels
