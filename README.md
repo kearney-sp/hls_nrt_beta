@@ -6,3 +6,4 @@ RG notebook: [![Binder](https://binder.pangeo.io/badge_logo.svg)](https://binder
 Beta notebook: [![Binder](https://aws-uswest2-binder.pangeo.io/badge_logo.svg)](https://aws-uswest2-binder.pangeo.io/v2/gh/kearney-sp/hls_nrt_beta/main?urlpath=lab/tree/HLS_Shortgrass_Explorer_v1.ipynb)
 
 Beta dashboard: [![Binder](https://aws-uswest2-binder.pangeo.io/badge_logo.svg)](https://aws-uswest2-binder.pangeo.io/v2/gh/kearney-sp/hls_nrt_beta/main?urlpath=panel/HLS_Shortgrass_Explorer_v1.ipynb)
+
