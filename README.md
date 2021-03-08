@@ -1,6 +1,8 @@
 # hls_nrt_beta
 Testing for near-real-time products from Harmonized Landsat-Sentinel COG
 
-Biomass prediction notebook: [![Binder](https://binder.pangeo.io/badge_logo.svg)](https://binder.pangeo.io/v2/gh/kearney-sp/hls_nrt_beta/main?filepath=hls_biomass.ipynb)
+RG notebook: [![Binder](https://binder.pangeo.io/badge_logo.svg)](https://binder.pangeo.io/v2/gh/kearney-sp/hls_nrt_beta/main?filepath=lab/tree/HLS_BM_Explorer(RG).ipynb)
 
-Biomass prediction notebook + AWS: [![Binder](https://aws-uswest2-binder.pangeo.io/badge_logo.svg)](https://aws-uswest2-binder.pangeo.io/v2/gh/kearney-sp/hls_nrt_beta/main?filepath=hls_biomass_aws_v2.ipynb)
+Beta notebook: [![Binder](https://aws-uswest2-binder.pangeo.io/badge_logo.svg)](https://aws-uswest2-binder.pangeo.io/v2/gh/kearney-sp/hls_nrt_beta/main?filepath=lab/tree/HLS_Shortgrass_Explorer_v1.ipynb)
+
+Beta dashboard: [![Binder](https://aws-uswest2-binder.pangeo.io/badge_logo.svg)](https://aws-uswest2-binder.pangeo.io/v2/gh/kearney-sp/hls_nrt_beta/main?filepath=panel/HLS_Shortgrass_Explorer_v1.ipynb)
