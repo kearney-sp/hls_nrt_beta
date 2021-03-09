@@ -21,8 +21,6 @@ dependencies:
   - dask-labextension
   - param
   - hvplot
-  - intake-stac
-  - sat-search
   - statsmodels
   - cvxopt
   - pip:
