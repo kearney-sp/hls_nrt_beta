@@ -5,6 +5,7 @@ from src.hls_funcs.bands import *
 from src.hls_funcs.indices import *
 from pysptools.abundance_maps import amaps
 import scipy.stats as st
+import dask
 
 func_dict = {
     "blue": blue_func,
@@ -49,25 +50,23 @@ def predict_biomass(dat, model, se=True):
                         coords=dat.coords)
 
 
-def pred_bm(dat, model, dim):
+def pred_bm(dat, model):
     model_vars = [n for n in model.params.index if ":" not in n and "Intercept" not in n]
 
     dat_masked = dat.where(dat.notnull)
-
-    dims_list = [[dim] for v in model_vars]
 
     def pred_func(*args, mod_vars_np):
         vars_dict_np = {}
         for idx, v in enumerate(mod_vars_np):
             vars_dict_np[v] = args[idx]
-        #print(vars_dict_np)
         bm_np = np.ones_like(args[0]) * np.nan
         mask = np.any(np.isnan(args), axis=0)
         bm_np[~mask] = np.exp(model.predict(vars_dict_np))
-        #print(bm_np)
         return bm_np.astype('int16')
 
-    def pred_func_xr(dat_xr, model_vars_xr, dims):
+    def pred_func_xr(dat_xr, model_vars_xr):
+        dat_xr = dat_xr.stack(z=('y', 'x'))
+        dims_list = [['z'] for v in model_vars]
         vars_list_xr = []
         for v in model_vars_xr:
             vars_list_xr.append(func_dict[v](dat_xr))
@@ -76,14 +75,76 @@ def pred_bm(dat, model, dim):
                                kwargs=dict(mod_vars_np=np.array(model_vars_xr)),
                                dask='parallelized',
                                vectorize=True,
-                               input_core_dims=dims,
-                               output_core_dims=[dims[0]],
+                               input_core_dims=dims_list,
+                               output_core_dims=[dims_list[0]],
                                output_dtypes=['int16'])
-        return bm_xr
+        return bm_xr.unstack('z')
 
-    bm_out = pred_func_xr(dat_masked, model_vars, dims_list)
+    bm_out = pred_func_xr(dat_masked, model_vars)
 
     return bm_out
+
+
+def pred_bm_se(dat, model):
+    model_vars = [n for n in model.params.index if ":" not in n and "Intercept" not in n]
+
+    dat_masked = dat.where(dat.notnull)
+
+    def pred_func(*args, mod_vars_np):
+        mask = np.any(np.isnan(args), axis=0)
+        vars_dict_np = {}
+        for idx, v in enumerate(mod_vars_np):
+            vars_dict_np[v] = args[idx]
+        se_np = np.ones_like(args[0]) * np.nan
+        se_np[~mask] = model.get_prediction(vars_dict_np).se_obs
+        return se_np.astype('float32')
+
+    def pred_func_xr(dat_xr, model_vars_xr):
+        dat_xr = dat_xr.stack(z=('y', 'x'))
+        dims_list = [['z'] for v in model_vars]
+        vars_list_xr = []
+        for v in model_vars_xr:
+            vars_list_xr.append(func_dict[v](dat_xr))
+        se_xr = xr.apply_ufunc(pred_func,
+                               *vars_list_xr,
+                               kwargs=dict(mod_vars_np=np.array(model_vars_xr)),
+                               dask='parallelized',
+                               vectorize=True,
+                               input_core_dims=dims_list,
+                               output_core_dims=[dims_list[0]],
+                               output_dtypes=['float32'])
+        return se_xr.unstack('z')
+
+    se_out = pred_func_xr(dat_masked, model_vars)
+
+    return se_out
+
+
+def pred_bm_thresh(dat_bm, dat_se, thresh_kg):
+    thresh_log = np.log(thresh_kg)
+    dat_bm = dat_bm.stack(z=('y', 'x'))
+    dat_se = dat_se.stack(z=('y', 'x'))
+
+    def pred_func(arr_bm, arr_se):
+        thresh_pre = (thresh_log - np.log(arr_bm)) / arr_se
+        arr_thresh = st.norm.cdf(thresh_pre)
+        return arr_thresh.astype('float32')
+
+    def pred_func_xr(dat_bm, dat_se):
+
+        thresh_xr = xr.apply_ufunc(pred_func,
+                               *[dat_bm, dat_se],
+                               dask='parallelized',
+                               vectorize=True,
+                               input_core_dims=[['z'], ['z']],
+                               output_core_dims=['z'],
+                               output_dtypes=['float32'])
+        return thresh_xr.unstack('z')
+
+    # bm_out = pred_func_xr(dat_masked, model_vars, dims_list)
+    thresh_out = pred_func_xr(dat_bm, dat_se)
+    return thresh_out
+
 
 
 def pred_bm2(dat, model):
@@ -126,7 +187,7 @@ def pred_bm2(dat, model):
     return bm_out
 
 
-def pred_bm_se(dat, model):
+def pred_bm_se2(dat, model):
     model_vars = [n for n in model.params.index if ":" not in n and "Intercept" not in n]
 
     dat_masked = dat.where(dat.notnull)
@@ -166,7 +227,7 @@ def pred_bm_se(dat, model):
     return se_out
 
 
-def pred_bm_thresh(dat, model, thresh_kg):
+def pred_bm_thresh2(dat, model, thresh_kg):
     model_vars = [n for n in model.params.index if ":" not in n and "Intercept" not in n]
 
     dat_masked = dat.where(dat.notnull)
@@ -210,12 +271,10 @@ def pred_bm_thresh(dat, model, thresh_kg):
 
 
 
-def pred_cov(dat, ends_dict, dim):
+def pred_cov(dat, ends_dict):
     end_classes = list(ends_dict.keys())
     end_vars = list(ends_dict[end_classes[0]].keys())
     end_vals = np.array([list(ends_dict[c].values()) for c in end_classes])
-
-    dims_list = [[dim] for c in end_vars]
 
     def pred_unmix(*args, ends, idx):
         mat = np.array(args).T
@@ -224,7 +283,9 @@ def pred_cov(dat, ends_dict, dim):
         unmixed[unmixed > 1.0] = 1.0
         return unmixed[:, idx]
 
-    def pred_unmix_xr(dat_xr, dims, ends, idx, name):
+    def pred_unmix_xr(dat_xr, ends, idx, name):
+        dat_xr = dat_xr.stack(z=('y', 'x'))
+        dims_list = [['z'] for c in end_vars]
         vars_list_xr = []
         for v in end_vars:
             vars_list_xr.append(func_dict[v](dat_xr))
@@ -232,16 +293,16 @@ def pred_cov(dat, ends_dict, dim):
                                     *vars_list_xr,
                                     dask='parallelized',
                                     vectorize=True,
-                                    input_core_dims=dims,
-                                    output_core_dims=[dims[0]],
+                                    input_core_dims=dims_list,
+                                    output_core_dims=[dims_list[0]],
                                     output_dtypes=['float32'],
                                     kwargs=dict(ends=ends, idx=idx))
         unmixed_xr = unmixed_xr.assign_coords(type=name)
-        return unmixed_xr
+        return unmixed_xr.unstack('z')
 
     covArrays = []
     for idx, c in enumerate(end_classes):
-        covArrays.append(pred_unmix_xr(dat, dims=dims_list, ends=[end_vals], idx=idx, name=c).unstack('z'))
+        covArrays.append(pred_unmix_xr(dat, ends=[end_vals], idx=idx, name=c))
 
     dat_cov = xr.concat(covArrays, dim='type', join='override', combine_attrs='drop')
     #dat_cov['type'] = [c for c in end_classes]
