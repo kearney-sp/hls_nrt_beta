@@ -310,11 +310,6 @@ def pred_bm_thresh2(dat, model, thresh_kg):
     return se_out
 
 
-def pred_cov(dat, model):
-
-
-
-
 def pred_cov_sma(dat, ends_dict):
     end_classes = list(ends_dict.keys())
     end_vars = list(ends_dict[end_classes[0]].keys())
