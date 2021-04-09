@@ -5,18 +5,22 @@ from src.hls_funcs.bands import *
 from src.hls_funcs.indices import *
 from pysptools.abundance_maps import amaps
 import scipy.stats as st
+from sklearn.cross_decomposition import PLSRegression
+from sklearn.preprocessing import PolynomialFeatures
 import dask
 
 func_dict = {
     "blue": blue_func,
+    "green": green_func,
+    "red": red_func,
+    "nir": nir_func,
+    "swir1": swir1_func,
+    "swir2": swir2_func,
     "ndvi": ndvi_func,
     "dfi": dfi_func,
     "ndti": ndti_func,
     "satvi": satvi_func,
     "ndii7": ndii7_func,
-    "nir": nir_func,
-    "swir1": swir1_func,
-    "swir2": swir2_func,
     "bai_126": bai_126_func,
     "bai_136": bai_136_func,
     "bai_146": bai_146_func,
@@ -146,6 +150,42 @@ def pred_bm_thresh(dat_bm, dat_se, thresh_kg):
     return thresh_out
 
 
+def pred_cov(dat, model):
+    pls2_mod = model
+
+    band_list = ['blue', 'green', 'red', 'nir', 'swir1', 'swir2',
+                 'dfi', 'ndvi', 'ndti', 'satvi', 'ndii7',
+                 'bai_126', 'bai_136', 'bai_146', 'bai_236', 'bai_246', 'bai_346']
+
+    def pred_cov_np(*args):
+        mat = np.array(args).T
+        unmixed = np.ones((mat.shape[0], 4)) * np.nan
+        if mat[~np.any(np.isnan(mat), axis=1), :].shape[0] > 0:
+            mat2 = PolynomialFeatures(2).fit_transform(mat[~np.any(np.isnan(mat), axis=1), :])
+            unmixed[~np.any(np.isnan(mat), axis=1), :] = pls2_mod.predict(mat2)
+            unmixed[np.where(unmixed < 0)] = 0
+            unmixed[np.where(unmixed > 1)] = 1
+        return unmixed[:, 0], unmixed[:, 1], unmixed[:, 2], unmixed[:, 3]
+
+    def pred_cov_xr(dat_xr, name):
+        dat_xr = dat_xr.stack(z=('y', 'x'))
+        vars_list_xr = []
+        for v in band_list:
+            vars_list_xr.append(func_dict[v](dat_xr))
+        unmixed_xr = xr.apply_ufunc(pred_cov_np,
+                                    *vars_list_xr,
+                                    dask='parallelized',
+                                    vectorize=True,
+                                    input_core_dims=np.repeat(['z'], len(band_list)),
+                                    output_core_dims=['z', 'z', 'z', 'z'],
+                                    output_dtypes=['float32', 'float32', 'float32', 'float32'])
+        cov_xr = xr.concat(unmixed_xr, dim='type').unstack('z')
+        cov_xr = cov_xr.assign_coords(type=name)
+        return cov_xr.to_dataset(dim='type')
+
+    dat_cov = pred_cov_xr(dat, name=['BARE', 'SD', 'GREEN', 'LITT'])
+    return dat_cov
+
 
 def pred_bm2(dat, model):
     model_vars = [n for n in model.params.index if ":" not in n and "Intercept" not in n]
@@ -270,8 +310,12 @@ def pred_bm_thresh2(dat, model, thresh_kg):
     return se_out
 
 
+def pred_cov(dat, model):
 
-def pred_cov(dat, ends_dict):
+
+
+
+def pred_cov_sma(dat, ends_dict):
     end_classes = list(ends_dict.keys())
     end_vars = list(ends_dict[end_classes[0]].keys())
     end_vals = np.array([list(ends_dict[c].values()) for c in end_classes])
@@ -314,7 +358,7 @@ def pred_cov(dat, ends_dict):
 
 
 
-def pred_cov2(dat, ends_dict):
+def pred_cov_sma2(dat, ends_dict):
     end_classes = list(ends_dict.keys())
     end_vars = list(ends_dict[end_classes[0]].keys())
     end_vals = np.array([list(ends_dict[c].values()) for c in end_classes])

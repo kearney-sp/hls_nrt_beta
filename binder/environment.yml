@@ -1,9 +1,12 @@
+name: hls_cog2_env
 channels:
   - conda-forge
   - defaults
 dependencies:
+  - numpy
   - gdal
   - rasterio
+  - rioxarray
   - shapely
   - geopandas
   - geoviews
@@ -12,6 +15,7 @@ dependencies:
   - matplotlib
   - cartopy
   - scikit-image
+  - scikit-learn
   - hvplot
   - pyepsg
   - jupyterlab
@@ -20,8 +24,10 @@ dependencies:
   - panel
   - dask-labextension
   - param
-  - hvplot
   - statsmodels
   - cvxopt
+  - pip
   - pip:
         - pysptools
+        - sat-search
+        - stackstac

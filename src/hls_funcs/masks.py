@@ -1,6 +1,7 @@
 import dask
 import numpy as np
 import xarray as xr
+from rasterio import features
 
 
 def mask_hls(src):
@@ -125,3 +126,11 @@ def bolton_mask(src, time_dim='time'):
     cloud_outliers = cloud_outlier_mask_xr(dat_blue, [time_dim]).transpose(time_dim, 'y', 'x')
     mask = xr.ufuncs.maximum(cloud_outliers, shadow_outliers)
     return mask
+
+
+def shp2mask(shp, xr_object, transform, outshape, fill=0, dtype='int16', **kwargs):
+    raster = features.rasterize(shp, fill=fill, transform=transform,
+                                out_shape=outshape, dtype=dtype, **kwargs)
+    return xr.DataArray(raster,
+                        coords=(xr_object.coords['y'].values, xr_object.coords['x']),
+                        dims=('y', 'x'))
