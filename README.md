@@ -7,3 +7,4 @@ Beta notebook: [![Binder](https://aws-uswest2-binder.pangeo.io/badge_logo.svg)](
 
 Beta dashboard: [![Binder](https://aws-uswest2-binder.pangeo.io/badge_logo.svg)](https://aws-uswest2-binder.pangeo.io/v2/gh/kearney-sp/hls_nrt_beta/main?urlpath=panel/HLS_Shortgrass_Explorer_v3.ipynb)
 
+Beta notebook with nbgitpuller: [![Binder](https://aws-uswest2-binder.pangeo.io/badge_logo.svg)](https://aws-uswest2-binder.pangeo.io/v2/gh/kearney-sp/hls_nrt_beta/binder?urlpath=git-pull%3Frepo%3Dhttps%253A%252F%252Fgithub.com%252Fkearney-sp%252Fhls_nrt_beta%26urlpath%3Dlab%252Ftree%252Fhls_nrt_beta%252FHLS_Shortgrass_Explorer_v3.ipynb%26branch%3Dmain)
