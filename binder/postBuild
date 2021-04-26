@@ -1,5 +1,7 @@
 #!/bin/bash
 jupyter labextension install @jupyterlab/server-proxy \
                              dask-labextension
+jupyter labextension install jupyterlab_bokeh
+jupyter labextension install @pyviz/jupyterlab_pyviz
 
 #EOF
