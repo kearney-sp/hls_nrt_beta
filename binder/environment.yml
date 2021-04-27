@@ -22,6 +22,8 @@ dependencies:
   - jupyterlab
   - jupyter-server-proxy
   - jupyter-panel-proxy
+  - jupyter_bokeh
+  - pyviz_comms
   - panel
   - dask-labextension
   - param
