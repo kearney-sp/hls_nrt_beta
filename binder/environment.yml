@@ -19,7 +19,7 @@ dependencies:
   - scikit-learn
   - hvplot
   - pyepsg
-  - jupyterlab
+  - jupyterlab >= 3.0
   - jupyter-server-proxy
   - jupyter-panel-proxy
   - jupyter_bokeh
