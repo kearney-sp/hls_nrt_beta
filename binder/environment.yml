@@ -23,6 +23,7 @@ dependencies:
   - jupyter_bokeh
   - panel
   - dask-labextension
+  - dask-gateway
   - param
   - statsmodels
   - cvxopt
