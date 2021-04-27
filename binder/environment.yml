@@ -3,7 +3,6 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - python=3.9.2
   - numpy
   - gdal
   - rasterio
@@ -19,11 +18,9 @@ dependencies:
   - scikit-learn
   - hvplot
   - pyepsg
-  - jupyterlab >= 3.0
   - jupyter-server-proxy
   - jupyter-panel-proxy
   - jupyter_bokeh
-  - pyviz_comms
   - panel
   - dask-labextension
   - param
