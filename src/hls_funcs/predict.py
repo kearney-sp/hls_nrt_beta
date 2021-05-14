@@ -124,6 +124,10 @@ def pred_bm_se(dat, model):
     return se_out
 
 
+def xr_cdf(dat):
+    return xr.apply_ufunc(st.norm.cdf, dat)
+
+
 def pred_bm_thresh(dat_bm, dat_se, thresh_kg):
     thresh_log = np.log(thresh_kg)
     dat_bm = dat_bm.stack(z=('y', 'x'))
