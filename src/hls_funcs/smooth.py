@@ -1,7 +1,6 @@
 import numpy as np
 import xarray as xr
 import pandas as pd
-import cv2 as cv
 from scipy.signal import savgol_filter
 
 
@@ -210,18 +209,3 @@ def despike_ts_xr(dat, dat_thresh, dims, z_thresh=3.5):
                            output_dtypes=[float])
     return xr_ds#.transpose('band', 'y', 'x')
 
-
-def mean_filter(img):
-    kernel = np.ones((3, 3)) / 9
-    img_mf = cv.filter2D(img, -1, kernel=kernel)
-    return img_mf
-
-
-def mean_filter_xr(dat, dims):
-    xr_mf = xr.apply_ufunc(mean_filter,
-                           dat,
-                           input_core_dims=[dims],
-                           output_core_dims=[dims],
-                           dask='parallelized', vectorize=True,
-                           output_dtypes=[np.float])
-    return xr_mf
