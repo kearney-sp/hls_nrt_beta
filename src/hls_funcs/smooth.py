@@ -156,34 +156,37 @@ def mask_ts_outliers(ts, threshold=3.5):
     return ts_masked
 
 
-def despike_ts(dat_ts,  dat_thresh, z_thresh=3.5):
-    dat_ts_cln = mask_ts_outliers(dat_ts, threshold=z_thresh)
+def despike_ts(dat_ts, dat_thresh, mask_outliers=False, z_thresh=3.5, iters=2):
+    dat_ts_cln = dat_ts.copy()
+    if mask_outliers:
+        dat_ts_cln = mask_ts_outliers(dat_ts_cln, threshold=z_thresh)
     dat_mask = np.zeros_like(dat_ts_cln)
-    for idx in range(len(dat_ts_cln)):
-        if not np.isnan(dat_ts_cln[idx]):
-            idx_clear = np.where(~np.isnan(dat_ts_cln))[0]
-            if idx == np.min(idx_clear):
-                continue
-            elif idx == np.max(idx_clear):
-                continue
-            else:
-                idx_pre = idx_clear[idx_clear < idx][-1]
-                idx_post = idx_clear[idx_clear > idx][0]
-                y = np.array([dat_ts_cln[idx_pre], dat_ts_cln[idx_post]])
-                x = np.array([idx_pre, idx_post])
-                dx = np.diff(x)
-                dy = np.diff(y)
-                slope = dy / dx
-                dat_interp = dat_ts_cln[idx_pre] + slope[0] * (idx - idx_pre)
-                dat_diff = dat_interp - dat_ts_cln[idx]
-                shadow_val = dat_diff / (dat_ts_cln[idx_post] - dat_ts_cln[idx_pre])
-                if (idx_post - idx_pre < 45) & (np.abs(dat_diff) > dat_thresh) & (np.abs(shadow_val) > 2):
-                    dat_ts_cln[idx] = np.nan
-                    dat_mask[idx] = 1
-                else:
+    for i in range(iters):
+        for idx in range(len(dat_ts_cln)):
+            if not np.isnan(dat_ts_cln[idx]):
+                idx_clear = np.where(~np.isnan(dat_ts_cln))[0]
+                if idx == np.min(idx_clear):
                     continue
-        else:
-            continue
+                elif idx == np.max(idx_clear):
+                    continue
+                else:
+                    idx_pre = idx_clear[idx_clear < idx][-1]
+                    idx_post = idx_clear[idx_clear > idx][0]
+                    y = np.array([dat_ts_cln[idx_pre], dat_ts_cln[idx_post]])
+                    x = np.array([idx_pre, idx_post])
+                    dx = np.diff(x)
+                    dy = np.diff(y)
+                    slope = dy / dx
+                    dat_interp = dat_ts_cln[idx_pre] + slope[0] * (idx - idx_pre)
+                    dat_diff = dat_interp - dat_ts_cln[idx]
+                    shadow_val = dat_diff / (dat_ts_cln[idx_post] - dat_ts_cln[idx_pre])
+                    if (idx_post - idx_pre < 45) & (np.abs(dat_diff) > dat_thresh) & (np.abs(shadow_val) > 2):
+                        dat_ts_cln[idx] = np.nan
+                        dat_mask[idx] = 1
+                    else:
+                        continue
+            else:
+                continue
     dat_ts_cln[np.where(dat_mask == 1)] = np.nan
     return dat_ts_cln
 
