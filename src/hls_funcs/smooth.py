@@ -156,7 +156,7 @@ def mask_ts_outliers(ts, threshold=3.5):
     return ts_masked
 
 
-def despike_ts(dat_ts, dat_thresh, mask_outliers=False, z_thresh=3.5, iters=2):
+def despike_ts(dat_ts, dat_thresh, z_thresh=3.5, mask_outliers=False, iters=2):
     dat_ts_cln = dat_ts.copy()
     if mask_outliers:
         dat_ts_cln = mask_ts_outliers(dat_ts_cln, threshold=z_thresh)
@@ -201,11 +201,13 @@ def smooth_xr(dat, dims):
     return xr_smoothed#.transpose('band', 'y', 'x')
 
 
-def despike_ts_xr(dat, dat_thresh, dims, z_thresh=3.5):
+def despike_ts_xr(dat, dat_thresh, dims, z_thresh=3.5, mask_outliers=False, iters=2):
     xr_ds = xr.apply_ufunc(despike_ts,
                            dat,
                            kwargs=dict(dat_thresh=dat_thresh,
-                                       z_thresh=z_thresh),
+                                       z_thresh=z_thresh,
+                                       mask_outliers=mask_outliers,
+                                       iters=iters),
                            input_core_dims=[dims],
                            output_core_dims=[dims],
                            dask='parallelized', vectorize=True,
