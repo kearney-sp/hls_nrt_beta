@@ -115,10 +115,10 @@ def non_uniform_savgol(x, y, window, polynom):
     return y_smoothed
 
 
-def double_savgol(ts, window1_min=7, window2=31, polynom1=3, polynom2=3, limit=61):
+def double_savgol(ts, double=True, window1_min=11, window2=59, polynom1=3, polynom2=3, limit=61):
     ts_tmp = ts.copy()
     window1 = int(np.max([7, int(len(ts_tmp[~np.isnan(ts_tmp)]) / 4) // 2 * 2 + 1]))
-    if len(ts_tmp[~np.isnan(ts_tmp)]) > window1_min:
+    if double and len(ts_tmp[~np.isnan(ts_tmp)]) > window1_min:
         ts_tmp[~np.isnan(ts_tmp)] = non_uniform_savgol(np.arange(len(ts_tmp))[~np.isnan(ts_tmp)],
                                                        ts_tmp[~np.isnan(ts_tmp)],
                                                        window=window1, polynom=polynom1)
@@ -156,7 +156,7 @@ def mask_ts_outliers(ts, threshold=3.5):
     return ts_masked
 
 
-def despike_ts(dat_ts, dat_thresh, z_thresh=3.5, mask_outliers=False, iters=2):
+def despike_ts(dat_ts, dat_thresh, days_thresh, z_thresh=3.5, mask_outliers=False, iters=2):
     dat_ts_cln = dat_ts.copy()
     if mask_outliers:
         dat_ts_cln = mask_ts_outliers(dat_ts_cln, threshold=z_thresh)
@@ -180,7 +180,7 @@ def despike_ts(dat_ts, dat_thresh, z_thresh=3.5, mask_outliers=False, iters=2):
                     dat_interp = dat_ts_cln[idx_pre] + slope[0] * (idx - idx_pre)
                     dat_diff = dat_interp - dat_ts_cln[idx]
                     shadow_val = dat_diff / (dat_ts_cln[idx_post] - dat_ts_cln[idx_pre])
-                    if (idx_post - idx_pre < 45) & (np.abs(dat_diff) > dat_thresh) & (np.abs(shadow_val) > 2):
+                    if (idx_post - idx_pre < days_thresh) & (np.abs(dat_diff) > dat_thresh) & (np.abs(shadow_val) > 2):
                         dat_ts_cln[idx] = np.nan
                         dat_mask[idx] = 1
                     else:
@@ -191,20 +191,22 @@ def despike_ts(dat_ts, dat_thresh, z_thresh=3.5, mask_outliers=False, iters=2):
     return dat_ts_cln
 
 
-def smooth_xr(dat, dims):
+def smooth_xr(dat, dims, double=True):
     xr_smoothed = xr.apply_ufunc(double_savgol,
                                  dat,
+                                 kwargs=dict(double=double),
                                  input_core_dims=[dims],
                                  output_core_dims=[dims],
                                  dask='parallelized', vectorize=True,
                                  output_dtypes=[float])
-    return xr_smoothed#.transpose('band', 'y', 'x')
+    return xr_smoothed
 
 
-def despike_ts_xr(dat, dat_thresh, dims, z_thresh=3.5, mask_outliers=False, iters=2):
+def despike_ts_xr(dat, dat_thresh, dims, days_thresh=60, z_thresh=3.5, mask_outliers=False, iters=2):
     xr_ds = xr.apply_ufunc(despike_ts,
                            dat,
                            kwargs=dict(dat_thresh=dat_thresh,
+                                       days_thresh=days_thresh,
                                        z_thresh=z_thresh,
                                        mask_outliers=mask_outliers,
                                        iters=iters),
@@ -212,5 +214,5 @@ def despike_ts_xr(dat, dat_thresh, dims, z_thresh=3.5, mask_outliers=False, iter
                            output_core_dims=[dims],
                            dask='parallelized', vectorize=True,
                            output_dtypes=[float])
-    return xr_ds#.transpose('band', 'y', 'x')
+    return xr_ds
 
