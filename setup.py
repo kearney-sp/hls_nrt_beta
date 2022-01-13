@@ -16,6 +16,6 @@ setuptools.setup(
         "Bug Tracker": "https://github.com/kearney-sp/hls_nrt_beta/issues"
     },
     license='MIT',
-    packages=['toolbox'],
+    packages=['src'],
     install_requires=['requests'],
 )
