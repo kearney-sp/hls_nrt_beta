@@ -17,5 +17,5 @@ setuptools.setup(
     },
     license='MIT',
     packages=['src'],
-    install_requires=['requests'],
+    install_requires=['requests', 'numpy', 'netrc', 'stackstac', 'dask', 'xarray', 'rasterio', 'pandas', 'scipy', 'scikit-learn', 'pysptools'],
 )
